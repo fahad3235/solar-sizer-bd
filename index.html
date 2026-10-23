@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar Sizer BD</title>
+<meta name="description" content="Offline bilingual solar sizing calculator for Bangladesh - size panels, inverter and battery for your home.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <div>
+      <h1 id="brandName" class="brand-sub">Solar Sizer BD</h1>
+      <p class="tagline" id="tagline"></p>
+    </div>
+    <button id="langBtn" type="button" class="lang-btn" aria-label="Language"></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- 1. LOAD -->
+  <section class="card" aria-labelledby="secLoad">
+    <h2 id="secLoad">1. Your load</h2>
+    <div class="preset-row">
+      <label for="presetSel" id="presetLabel">Quick add</label>
+      <select id="presetSel"></select>
+      <button id="addPresetBtn" type="button" class="btn">Add</button>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label for="aName" id="nameLabel">Appliance name</label>
+        <input id="aName" type="text" maxlength="60" placeholder="e.g. Ceiling Fan" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="aWatts" id="wattsLabel">Watts</label>
+        <input id="aWatts" type="number" min="0.5" max="10000" step="any" inputmode="decimal" placeholder="75">
+      </div>
+      <div class="field">
+        <label for="aQty" id="qtyLabel">Qty</label>
+        <input id="aQty" type="number" min="1" max="99" step="1" inputmode="numeric" placeholder="2">
+      </div>
+      <div class="field">
+        <label for="aHours" id="hoursLabel">Hours/day</label>
+        <input id="aHours" type="number" min="0" max="24" step="any" inputmode="decimal" placeholder="8">
+      </div>
+    </div>
+    <button id="addBtn" type="button" class="btn primary">Add appliance</button>
+    <p id="formErr" class="err" hidden role="alert"></p>
+
+    <p id="emptyLoad" class="empty">No appliances yet.</p>
+    <div class="table-scroll">
+    <table id="appTable" hidden>
+      <thead><tr>
+        <th data-th="colName">Appliance</th><th data-th="colWatts" class="num">Watts</th>
+        <th data-th="colQty" class="num">Qty</th><th data-th="colHours" class="num">Hrs/day</th>
+        <th data-th="colDaily" class="num">Wh/day</th><th data-th="colDel"></th>
+      </tr></thead>
+      <tbody id="appRows"></tbody>
+    </table>
+    </div>
+    <div class="summary">
+      <div><span id="totalDailyLabel">Total daily energy</span>: <strong id="sumDaily">0 kWh/day</strong></div>
+      <div><span id="peakLabel">Peak load (all on)</span>: <strong id="sumPeak">0 kW</strong></div>
+    </div>
+  </section>
+
+  <!-- 2. ASSUMPTIONS -->
+  <section class="card" aria-labelledby="secSettings">
+    <h2 id="secSettings">2. Assumptions</h2>
+    <p class="note" id="settingsNote"></p>
+    <div class="form-grid settings">
+      <div class="field">
+        <label for="sunHours" id="sunHoursLabel">Peak sun hours</label>
+        <input id="sunHours" type="number" min="0.5" max="12" step="0.1" inputmode="decimal" value="4.5">
+        <small id="sunHoursNote"></small>
+      </div>
+      <div class="field">
+        <label for="lossPct" id="lossLabel">System loss %</label>
+        <input id="lossPct" type="number" min="0" max="90" step="1" inputmode="decimal" value="20">
+      </div>
+      <div class="field">
+        <label for="panelW" id="panelWLabel">Panel wattage</label>
+        <select id="panelW"></select>
+      </div>
+      <div class="field">
+        <label for="battType" id="battTypeLabel">Battery type</label>
+        <select id="battType"></select>
+      </div>
+      <div class="field">
+        <label for="volts" id="voltLabel">System voltage</label>
+        <select id="volts"></select>
+      </div>
+      <div class="field">
+        <label for="autonomy" id="autonomyLabel">Backup days</label>
+        <input id="autonomy" type="number" min="0.5" max="7" step="0.5" inputmode="decimal" value="1">
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. RESULTS -->
+  <section class="card results" aria-labelledby="secResults">
+    <h2 id="secResults">3. Your solar system</h2>
+    <div class="result-grid">
+      <div class="result"><span class="r-label" id="rDaily"></span><strong id="vDaily" class="r-val">-</strong></div>
+      <div class="result"><span class="r-label" id="rPeak"></span><strong id="vPeak" class="r-val">-</strong></div>
+      <div class="result big"><span class="r-label" id="rSolar"></span><strong id="vSolar" class="r-val">-</strong></div>
+      <div class="result big"><span class="r-label" id="rPanels"></span><strong id="vPanels" class="r-val">-</strong></div>
+      <div class="result"><span class="r-label" id="rArrayActual"></span><strong id="vArray" class="r-val">-</strong></div>
+      <div class="result"><span class="r-label" id="rInverter"></span><strong id="vInverter" class="r-val">-</strong></div>
+      <div class="result"><span class="r-label" id="rRoof"></span><strong id="vRoof" class="r-val">-</strong></div>
+      <div class="result"><span class="r-label" id="rBattery"></span><strong id="vBattery" class="r-val">-</strong><small><span id="battFor"></span> &middot; <span id="vAutonomy"></span></small></div>
+    </div>
+    <p class="note" id="gridTieNote"></p>
+  </section>
+
+  <!-- 4. COST -->
+  <section class="card" aria-labelledby="secCost">
+    <h2 id="secCost">4. Cost estimate (optional)</h2>
+    <p class="note" id="costNote"></p>
+    <div class="form-grid settings">
+      <div class="field">
+        <label for="cPanel" id="panelPriceLabel">Panel price (each)</label>
+        <input id="cPanel" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
+      </div>
+      <div class="field">
+        <label for="cInverter" id="inverterPriceLabel">Inverter price</label>
+        <input id="cInverter" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
+      </div>
+      <div class="field">
+        <label for="cBattery" id="batteryPriceLabel">Battery price</label>
+        <input id="cBattery" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
+      </div>
+      <div class="field">
+        <label for="cInstall" id="installLabel">Installation %</label>
+        <input id="cInstall" type="number" min="0" max="100" step="any" inputmode="decimal" value="10">
+      </div>
+    </div>
+    <div class="table-scroll">
+    <table class="cost">
+      <tbody id="costRows"></tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- 5. DATA -->
+  <section class="card" aria-labelledby="secData">
+    <h2 id="secData">5. Data &amp; backup</h2>
+    <div class="btn-row">
+      <button id="exportBtn" type="button" class="btn">Export JSON</button>
+      <button id="importBtn" type="button" class="btn">Import JSON</button>
+      <input id="importFile" type="file" accept="application/json,.json" hidden>
+      <button id="clearBtn" type="button" class="btn danger">Clear all</button>
+    </div>
+    <p id="dataMsg" class="msg" role="status"></p>
+  </section>
+
+  <footer>
+    <p id="disclaimer" class="disclaimer"></p>
+  </footer>
+</main>
+
+<script src="js/logic.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
